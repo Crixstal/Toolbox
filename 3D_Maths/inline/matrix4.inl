@@ -1,10 +1,12 @@
 #include "utils.hpp"
+#include "constants.hpp"
 
 ////////////////////////////// CONSTRUCTORS
 
 inline Matrix4::Matrix4()
     : element{ 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f }
 {}
+
 inline Matrix4::Matrix4(const float& i_f0, const float& i_f1, const float& i_f2, const float& i_f3,
                         const float& i_f4, const float& i_f5, const float& i_f6, const float& i_f7,
                         const float& i_f8, const float& i_f9, const float& i_f10, const float& i_f11,
@@ -16,7 +18,7 @@ inline Matrix4::Matrix4(const float& i_f0, const float& i_f1, const float& i_f2,
 {}
 
 inline Matrix4::Matrix4(const Vector4& i_v0, const Vector4& i_v1, const Vector4& i_v2, const Vector4& i_v3)
-    : col{i_v0, i_v1, i_v2, i_v3}
+    : row{i_v0, i_v1, i_v2, i_v3}
 {}
 
 ////////////////////////////// OPERATORS
@@ -40,7 +42,7 @@ inline Vector4 Matrix4::operator*(const Vector4& i_vec) const
     {
         for (int line = 0; line < 4; line++)
         {
-            result.element[column] += *(&this->col[line].x + column) * i_vec.element[line];
+            result.element[column] += *(&this->row[line].x + column) * i_vec.element[line];
         }
     }
 
@@ -57,7 +59,7 @@ inline Matrix4 Matrix4::operator*(const Matrix4& i_mat) const
         {
             for(int k=0;k<4;k++)
             {
-                result.col[c].element[r]+= col[c].element[k] * i_mat.col[k].element[r];
+                result.row[c].element[r]+= row[c].element[k] * i_mat.row[k].element[r];
             }
         }
     }
@@ -73,7 +75,6 @@ inline bool Matrix4::operator==(const Matrix4& i_mat) const
 
     return result;
 }
-
 
 inline std::ostream& operator<<(std::ostream& o_o, const Matrix4& i_mat)
 {
@@ -239,29 +240,24 @@ inline Matrix4 Matrix4::RotateZ(const float& i_angleRadians)
     };
 }
 
-inline Matrix4 Matrix4::RotateXYZ(float i_xRadAngle, float i_yRadAngle, float i_zRadAngle)
+inline Matrix4 Matrix4::RotateZYX(float i_xRadAngle, float i_yRadAngle, float i_zRadAngle)
 {
     return  RotateZ(i_zRadAngle) * RotateY(i_yRadAngle) * RotateX(i_xRadAngle);
 }
 
-inline Matrix4 Matrix4::RotateXYZ(const Vector3& i_anglesRadians)
+inline Matrix4 Matrix4::RotateZYX(const Vector3& i_anglesRadians)
 {
-    return  RotateXYZ(i_anglesRadians.x,i_anglesRadians.y,i_anglesRadians.z);
+    return  RotateZYX(i_anglesRadians.x,i_anglesRadians.y,i_anglesRadians.z);
 }
 
 inline Matrix4 Matrix4::MatrixFromQuat(const Quaternion& i_q)
 {
-#if 0
-    float q0 = i_q.w, q1 = i_q.x, q2 = i_q.y, q3 = i_q.z;
-    return Matrix4{
-        2.f * (q0 * q0 + q1 * q1) - 1.f, 2.f * (q1 * q2 - q0 * q3), 2.f * (q1 * q3 + q0 * q2), 0.f,
-        2.f * (q1 * q2 + q0 * q3), 2.f * (q0 * q0 + q2 * q2) - 1.f, 2.f * (q2 * q3 - q0 * q1), 0.f,
-        2.f * (q1 * q3 - q0 * q2), 2.f * (q2 * q3 + q0 * q1), 2.f * (q0 * q0 + q3 * q3) - 1.f, 0.f,
-        0.f, 0.f, 0.f, 1.f }.Transpose();
-#else
+    i_q.Normalize();
+
     float dX = 2.f * i_q.x;
     float dY = 2.f * i_q.y;
     float dZ = 2.f * i_q.z;
+
     float sqX = dX * i_q.x;
     float sqY = dY * i_q.y;
     float sqZ = dZ * i_q.z;
@@ -273,13 +269,21 @@ inline Matrix4 Matrix4::MatrixFromQuat(const Quaternion& i_q)
     float qYW = dY * i_q.w;
     float qZW = dZ * i_q.w;
 
+    // TODO Determine which one of for row matrix
+
     return {
         1.f - sqY - sqZ,    qXY + qZW,          qXZ - qYW,          0.f,
         qXY - qZW,          1.f - sqX - sqZ,    qYZ + qXW,          0.f,
         qXZ + qYW,          qYZ - qXW,          1.f - sqX - sqY,    0.f,
         0.f,                0.f,                0.f,                1.f
     };
-#endif
+
+//    return {
+//            1.f - sqY - sqZ,    qXY - qZW,          qXZ + qYW,          0.f,
+//            qXY + qZW,          1.f - sqX - sqZ,    qYZ - qXW,          0.f,
+//            qXZ - qYW,          qYZ + qXW,          1.f - sqX - sqY,    0.f,
+//            0.f,                0.f,                0.f,                1.f
+//    };
 }
 
 inline Matrix4 Matrix4::Translate(float i_x, float i_y, float i_z)

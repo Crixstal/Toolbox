@@ -1,6 +1,9 @@
 #pragma once
 
-#include "vector4.hpp"
+// ======================== MATRIX ARE IN LINE
+
+//#include "vector4.hpp"
+
 struct Vector3;
 struct Vector4;
 struct Quaternion;
@@ -11,7 +14,7 @@ struct Matrix4
     {
         float element[16] = {0.f};
 
-        Vector4 col[4];
+        Vector4 row[4];
     };
 
 ////////////////////////////// CONSTRUCTORS
@@ -108,12 +111,12 @@ struct Matrix4
     /**
      * @summary Create a rotation matrix, calls RotateY * RotateX * RotateZ
      */
-    static Matrix4 RotateXYZ(float i_xRadAngle, float i_yRadAngle, float i_zRadAngle);
+    static Matrix4 RotateZYX(float i_xRadAngle, float i_yRadAngle, float i_zRadAngle);
 
     /**
      * @summary Create a rotation matrix, calls RotateY * RotateX * RotateZ
      */
-    static Matrix4 RotateXYZ(const Vector3& i_anglesRadians);
+    static Matrix4 RotateZYX(const Vector3& i_anglesRadians);
 
     /**
      * @return a rotation matrix from a quaternion
